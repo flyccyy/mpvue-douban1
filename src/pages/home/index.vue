@@ -43,12 +43,9 @@
 </template>
 
 <script>
-import request from "@/utils/request.js";
 export default {
   data() {
     return {
-      moviesList: [],
-      top250List: [],
       categoryList: [
         {
           name: "影院热映",
@@ -67,31 +64,32 @@ export default {
     this.categoryList.forEach(item => {
       this.getMovies(item);
     });
-    // this.getMovies();
-    // this.getTop250Movies();
   },
   methods: {
     //获取电影列表
-    async getMovies(item) {
-      console.log(item);
-      let res = await request({
+    getMovies(item) {
+      wx.request({
         url: `https://api.douban.com/v2/movie/${
           item.params
-        }?apikey=0df993c66c0c636e29ecbb5344252a4a`
+        }?apikey=0df993c66c0c636e29ecbb5344252a4a`,
+        header: {
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        success: res => {
+          // 解构
+          const {
+            statusCode,
+            data: { subjects }
+          } = res;
+          if (statusCode === 200) {
+            // 处理星星的分数：除以2向上取整
+            subjects.forEach(item => {
+              item.starNum = Math.ceil(item.rating.average / 2);
+            });
+            item.list = subjects;
+          }
+        }
       });
-      console.log(res);
-      //  success: res => {
-      // 解构
-      // const {statusCode,data:{subjects}} = res;
-      // if (statusCode === 200) {
-
-      // 处理星星的分数：除以2向上取整
-      //   subjects.forEach(item=>{
-      //     item.starNum = Math.ceil(item.rating.average/2)
-      //   })
-      //   item.list = subjects;
-      // }
-      // }
     }
   }
 };
